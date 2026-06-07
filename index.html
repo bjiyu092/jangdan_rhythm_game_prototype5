@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐸 귀여운 개고리개골청 놀이 🥁</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+<style>
+/* 전체 기본 귀여운 한지 및 파스텔풍 배경스타일 */
+body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    font-family: 'Gaegu', 'Comic Sans MS', sans-serif;
+    text-align: center;
+    background: linear-gradient(135deg, #FFF9E6 0%, #FFE5EC 100%);
+    min-height: 100vh;
+    color: #4A3E3D;
+    position: relative;
+}
+
+/* 전통 요소 데코레이션 (구름/달 배경 디자인) */
+.deco-cloud {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 50px;
+    filter: blur(1px);
+    z-index: -1;
+    animation: floatCloud 6s ease-in-out infinite alternate;
+}
+.cloud1 { width: 120px; height: 40px; top: 10%; left: 10%; }
+.cloud2 { width: 160px; height: 50px; top: 25%; right: 8%; animation-delay: 1s; }
+
+.deco-moon {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background: #FFF275;
+    border-radius: 50%;
+    top: 5%;
+    right: 15%;
+    z-index: -2;
+    box-shadow: 0 0 30px rgba(255, 242, 117, 0.6);
+}
+
+@keyframes floatCloud {
+    0% { transform: translateX(0) translateY(0); }
+    100% { transform: translateX(20px) translateY(5px); }
+}
+
+/* 타이틀 디자인 */
+h1 {
+    margin-top: 30px;
+    font-size: 55px;
+    color: #FF6B8B;
+    text-shadow: 4px 4px 0px #FFFFFF, 6px 6px 0px rgba(74, 62, 61, 0.1);
+    letter-spacing: 2px;
+}
+
+/* 말랑하고 통통한 버튼 디자인 */
+button {
+    padding: 18px 45px;
+    font-family: 'Gaegu', sans-serif;
+    font-size: 30px;
+    font-weight: bold;
+    border: 3px solid #4A3E3D;
+    border-radius: 50px;
+    background: #FFB84D;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 8px 0 #C67A00, 0 10px 20px rgba(0,0,0,0.1);
+    transition: all 0.1s ease;
+    outline: none;
+}
+button:hover {
+    background: #FFA826;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 0 #C67A00, 0 12px 22px rgba(0,0,0,0.15);
+}
+button:active {
+    transform: translateY(6px);
+    box-shadow: 0 2px 0 #C67A00, 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* 메인 컨테이너 (한지/단청 느낌 카드 박스) */
+.container-box {
+    background: #FFFFFF;
+    border: 6px solid #FFD166;
+    border-radius: 40px;
+    max-width: 600px;
+    margin: 30px auto;
+    padding: 30px;
+    box-shadow: 0 15px 30px rgba(168, 124, 94, 0.15);
+    position: relative;
+}
+.container-box::before {
+    content: "💮";
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 30px;
+    background: #FFE5EC;
+    padding: 0 10px;
+    border-radius: 50%;
+}
+
+#startScreen { margin-top: 60px; }
+
+#frog {
+    font-size: 130px;
+    margin: 20px 0;
+    display: inline-block;
+    animation: bounceFrog 0.8s infinite alternate ease-in-out;
+}
+
+@keyframes bounceFrog {
+    0% { transform: translateY(0) scale(1); }
+    100% { transform: translateY(-20px) scale(1.05); }
+}
+
+/* 설명창 폰트 및 리스트 */
+#description {
+    font-size: 26px;
+    line-height: 1.8;
+    color: #5C4D4D;
+    background: #FFFDF6;
+    padding: 20px;
+    border-radius: 25px;
+    border: 2px dashed #FFB84D;
+    text-align: left;
+    display: inline-block;
+}
+
+/* 음악 플레이어 박스 귀엽게 리디자인 */
+#musicBox {
+    background: #F0F9FF;
+    border: 3px solid #74B9FF;
+    margin: 25px auto;
+    padding: 15px;
+    border-radius: 25px;
+    width: 85%;
+}
+audio {
+    margin-top: 10px;
+    width: 100%;
+    border-radius: 15px;
+}
+
+/* 게임 플레이 영역 */
+#video {
+    border-radius: 30px;
+    border: 6px solid #4A3E3D;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+    background: #000;
+}
+
+#motionText {
+    font-size: 28px;
+    margin-top: 15px;
+    color: #4A3E3D;
+    font-weight: bold;
+    background: #FFEAA7;
+    border: 3px solid #4A3E3D;
+    display: inline-block;
+    padding: 10px 25px;
+    border-radius: 20px;
+}
+
+#gameArea {
+    position: relative;
+    width: 320px;
+    height: 500px;
+    margin: 20px auto;
+    background: #F7FFF7;
+    border-radius: 35px;
+    border: 8px solid #FFD166;
+    overflow: hidden;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.05), 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* 전통 장단 노트를 현대적 파스텔톤으로 가공 */
+.note {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    left: 100px;
+    border-radius: 50%;
+    line-height: 120px;
+    font-size: 55px;
+    font-weight: bold;
+    color: white;
+    border: 4px solid #4A3E3D;
+    box-shadow: 0 6px 0 rgba(74, 62, 61, 0.3);
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+}
+.deong { background: #FF7675; } /* 덩: 연홍색 */
+.deok { background: #74B9FF; }  /* 덕: 연청색 */
+.kung { background: #55EFC4; }  /* 쿵: 연비취색 */
+
+/* 판정선 - 귀여운 점선 스타일 */
+#judgeLine {
+    position: absolute;
+    bottom: 90px;
+    width: 100%;
+    height: 8px;
+    background: #FF4757;
+    box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+}
+
+#feedback {
+    font-size: 50px;
+    height: 65px;
+    margin-top: 10px;
+    font-weight: bold;
+    text-shadow: 2px 2px 0 white;
+}
+.correct { color: #2ECC71; animation: popText 0.3s ease; }
+.wrong { color: #FF4757; animation: shakeText 0.3s ease; }
+
+@keyframes popText {
+    0% { transform: scale(0.5); }
+    100% { transform: scale(1.1); }
+}
+
+#score {
+    font-size: 38px;
+    color: #6C5CE7;
+    margin-top: 10px;
+    font-weight: bold;
+    background: white;
+    display: inline-block;
+    padding: 5px 20px;
+    border-radius: 15px;
+    border: 2px solid #6C5CE7;
+}
+
+#gameEnd {
+    font-size: 45px;
+    margin-top: 20px;
+    color: #FF6B8B;
+    font-weight: bold;
+    animation: pulse 1s infinite alternate;
+}
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="deco-moon"></div>
+<div class="deco-cloud cloud1"></div>
+<div class="deco-cloud cloud2"></div>
+
+<div id="startScreen" class="container-box">
+    <h1>🐸 개고리개골청 놀이 🥁</h1>
+    <div id="frog">🐸</div>
+    <br><br>
+    <button onclick="startIntro()">놀이 시작! ✨</button>
+</div>
+
+<div id="introScreen" class="container-box hidden">
+    <h1>장단을 배워볼까?</h1>
+    <div id="description">
+        ✊ <b>덩</b> = 양손 주먹 무릎치기! (Clap)<br>
+        ✊ <b>덕</b> = 오른손 주먹 무릎치기!<br>
+        ✊ <b>쿵</b> = 왼손 주먹 무릎치기!
+        <br><br>
+        <center style="color:#FF6B8B;">장단 노릇이 <b>빨간 선</b>에 딱 겹칠 때<br>멋진 몸짓을 해보자!</center>
+    </div>
+
+    <div id="musicBox">
+        <div style="font-size:24px; font-weight: bold;">🎵 개고리개골청 노래 미리듣기</div>
+        <audio id="mainAudio" controls preload="auto">
+            <source src="http://googleusercontent.com/file_content/0" type="audio/mpeg">
+            브라우저가 오디오를 지원하지 않아요.
+        </audio>
+    </div>
+
+    <button onclick="startGame()">게임 시작! 🚀</button>
+</div>
+
+<div id="gameScreen" class="hidden" style="margin: 20px auto; max-width:900px; display:flex; justify-content:space-around; align-items:center; flex-wrap:wrap;">
+    <div class="container-box" style="margin: 10px; flex: 1; min-width: 340px;">
+        <h1>🥁 덩덕쿵 리듬놀이 🥁</h1>
+        <div id="motionText">현재 동작 : 없음</div>
+        <br><br>
+        <video id="video" width="400" height="300" autoplay playsinline></video>
+    </div>
+    
+    <div class="container-box" style="margin: 10px; width: 360px;">
+        <div id="gameArea">
+            <div id="judgeLine"></div>
+        </div>
+        <div id="feedback"></div>
+        <div id="score">점수 : 0</div>
+        <div id="gameEnd"></div>
+    </div>
+</div>
+
+<script>
+// 오디오 컨텍스트 정의 (브라우저 정책 우회용 무음/효과음 생성기)
+let audioCtx = null;
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    // 오디오 파일 로드 문제 방지용 플레이어 터치 활성화
+    const mainAud = document.getElementById("mainAudio");
+    if(mainAud) {
+        mainAud.play().then(() => {
+            mainAud.pause();
+            mainAud.currentTime = 0;
+        }).catch(e => console.log("Autoplay policy bypass standard handling"));
+    }
+}
+
+function startIntro(){
+    initAudio(); // 유저 클릭 액션 시점에 오디오 세션 초기화 활성화
+    document.getElementById("startScreen").classList.add("hidden");
+    document.getElementById("introScreen").classList.remove("hidden");
+}
+
+// 장구 소리를 대체할 청각 피드백 비프음 생성기 (Wav 파일 누락 에러 철저 방지)
+function playBeepSound(type) {
+    if(!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    if(type === "덩") {
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+    } else if(type === "덕") {
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+    } else if(type === "쿵") {
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+    }
+    
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+    osc.stop(audioCtx.currentTime + 0.2);
+}
+
+const rhythmPattern = ["덩", "덕", "쿵", "덩", "덕", "쿵", "덩", "덩", "쿵", "덕"];
+let currentIndex = 0;
+let currentRhythm = "";
+let score = 0;
+let activeNote = null;
+let noteY = 0;
+let gameStarted = false;
+
+const feedbackDiv = document.getElementById("feedback");
+const scoreDiv = document.getElementById("score");
+const gameEndDiv = document.getElementById("gameEnd");
+
+function startGame(){
+    // 게임 시작과 동시에 배경 음악 재생
+    const mainAud = document.getElementById("mainAudio");
+    if(mainAud) {
+        mainAud.currentTime = 0;
+        mainAud.play().catch(err => console.log("Audio play fail:", err));
+    }
+
+    document.getElementById("introScreen").classList.add("hidden");
+    document.getElementById("gameScreen").classList.remove("hidden");
+    
+    score = 0;
+    currentIndex = 0;
+    gameStarted = true;
+    nextRhythm();
+}
+
+function nextRhythm(){
+    if(currentIndex >= rhythmPattern.length){
+        endGame();
+        return;
+    }
+    currentRhythm = rhythmPattern[currentIndex];
+    createNote(currentRhythm);
+    currentIndex++;
+}
+
+function createNote(type){
+    const gameArea = document.getElementById("gameArea");
+    const note = document.createElement("div");
+    note.classList.add("note");
+    
+    if(type === "덩") note.classList.add("deong");
+    if(type === "덕") note.classList.add("deok");
+    if(type === "쿵") note.classList.add("kung");
+    
+    note.innerHTML = type;
+    note.style.top = "-120px";
+    gameArea.appendChild(note);
+    
+    activeNote = note;
+    noteY = -120;
+    
+    const fall = setInterval(()=>{
+        if(!gameStarted) {
+            clearInterval(fall);
+            return;
+        }
+        noteY += 4;
+        note.style.top = noteY + "px";
+        
+        if(noteY > 500){
+            clearInterval(fall);
+            note.remove();
+            feedbackDiv.innerHTML = "놓쳤어! 😢";
+            feedbackDiv.className = "wrong";
+            setTimeout(()=>{ nextRhythm(); }, 600);
+        }
+    }, 16);
+}
+
+function checkAnswer(action){
+    if(!gameStarted) return;
+    let correct = false;
+    
+    if(currentRhythm === "덩" && action === "clap") correct = true;
+    if(currentRhythm === "덕" && action === "right") correct = true;
+    if(currentRhythm === "쿵" && action === "left") correct = true;
+    
+    if(correct){
+        const judgeY = 380; // 판정 범위 세부 조정
+        const distance = Math.abs(noteY - judgeY);
+        let result = "";
+        
+        if(distance < 40){
+            result = "정확해! 🌟";
+            score += 20;
+        } else if(distance < 95){
+            result = "좋아! 👍";
+            score += 10;
+        } else {
+            result = "아쉬워! 😮";
+            score += 5;
+        }
+        
+        playBeepSound(currentRhythm);
+        feedbackDiv.innerHTML = result;
+        feedbackDiv.className = "correct";
+        scoreDiv.innerHTML = "점수 : " + score;
+        
+        if(activeNote) { activeNote.remove(); activeNote = null; }
+        noteY = 9999; // 루프 방지용 스킵값 변환
+        setTimeout(()=>{ nextRhythm(); }, 600);
+    }
+}
+
+function endGame(){
+    gameStarted = false;
+    gameEndDiv.innerHTML = "🎉 참 잘했어요! <br>최종 점수 : " + score + "점 🎉";
+    const mainAud = document.getElementById("mainAudio");
+    if(mainAud) mainAud.pause();
+}
+
+// MediaPipe 제어 파트 수렴 및 보정
+const video = document.getElementById("video");
+const hands = new Hands({
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+});
+
+hands.setOptions({
+    maxNumHands: 2,
+    minDetectionConfidence: 0.6,
+    minTrackingConfidence: 0.6
+});
+hands.onResults(onResults);
+
+const camera = new Camera(video, {
+    onFrame: async () => {
+        await hands.send({ image: video });
+    },
+    width: 400,
+    height: 300
+});
+camera.start();
+
+function isFist(hand){
+    const tipIds = [8, 12, 16, 20];
+    let folded = 0;
+    for(let i=0; i<tipIds.length; i++){
+        const tip = hand[tipIds[i]];
+        const pip = hand[tipIds[i]-2];
+        if(tip.y > pip.y) folded++;
+    }
+    return folded >= 3;
+}
+
+function onResults(results){
+    if(!gameStarted) return;
+    if(!results.multiHandLandmarks || results.multiHandLandmarks.length === 0){
+        document.getElementById("motionText").innerHTML = "현재 동작 : 없음 🐸";
+        return;
+    }
+    
+    const handsDetected = results.multiHandLandmarks;
+    const handedness = results.multiHandedness;
+    let detectedAction = "";
+    
+    if(handsDetected.length === 2){
+        if(isFist(handsDetected[0]) && isFist(handsDetected[1])){
+            detectedAction = "clap";
+            document.getElementById("motionText").innerHTML = "현재 동작 : 양손 주먹 ✊✊";
+        }
+    } else if(handsDetected.length === 1){
+        if(isFist(handsDetected[0])){
+            const handLabel = handedness[0].label;
+            if(handLabel === "Right"){
+                detectedAction = "right";
+                document.getElementById("motionText").innerHTML = "현재 동작 : 오른손 주먹 ✊";
+            } else {
+                detectedAction = "left";
+                document.getElementById("motionText").innerHTML = "현재 동작 : 왼손 주먹 ✊";
+            }
+        }
+    }
+    
+    if(detectedAction !== "") {
+        checkAnswer(detectedAction);
+    }
+}
+</script>
+</body>
+</html>
