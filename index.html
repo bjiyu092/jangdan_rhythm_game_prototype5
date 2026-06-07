@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+
+<title>개고리개골청 장단 놀이</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+<style>
+
+body{
+
+    margin:0;
+
+    background:
+    linear-gradient(
+    to bottom,
+    #FFF9D9,
+    #FFE8F5
+    );
+
+    font-family:'Arial';
+
+    text-align:center;
+
+    overflow:hidden;
+}
+
+h1{
+
+    margin-top:20px;
+
+    font-size:55px;
+
+    color:#FF6B81;
+}
+
+button{
+
+    padding:20px 45px;
+
+    font-size:30px;
+
+    border:none;
+
+    border-radius:30px;
+
+    background:#FFB84C;
+
+    color:white;
+
+    box-shadow:0 5px 0 #E39B2D;
+
+    cursor:pointer;
+}
+
+button:hover{
+
+    transform:scale(1.05);
+}
+
+#startScreen{
+
+    margin-top:120px;
+}
+
+#introScreen{
+
+    margin-top:30px;
+}
+
+#description{
+
+    font-size:28px;
+
+    line-height:1.8;
+
+    color:#555;
+}
+
+#video{
+
+    border-radius:30px;
+
+    border:8px solid white;
+
+    box-shadow:0 0 20px rgba(0,0,0,0.2);
+
+    margin-top:10px;
+}
+
+#gameArea{
+
+    position:relative;
+
+    width:320px;
+
+    height:520px;
+
+    margin:20px auto;
+
+    background:white;
+
+    border-radius:30px;
+
+    border:8px solid #FFD36B;
+
+    overflow:hidden;
+
+    box-shadow:0 0 20px rgba(0,0,0,0.15);
+}
+
+.note{
+
+    position:absolute;
+
+    width:130px;
+
+    height:130px;
+
+    left:95px;
+
+    border-radius:30px;
+
+    line-height:130px;
+
+    font-size:65px;
+
+    font-weight:bold;
+
+    color:white;
+}
+
+.deong{
+
+    background:#FF7675;
+}
+
+.deok{
+
+    background:#74B9FF;
+}
+
+.kung{
+
+    background:#55EFC4;
+}
+
+#judgeLine{
+
+    position:absolute;
+
+    bottom:90px;
+
+    width:100%;
+
+    height:10px;
+
+    background:#FF4757;
+}
+
+#feedback{
+
+    font-size:50px;
+
+    height:70px;
+
+    margin-top:10px;
+
+    font-weight:bold;
+}
+
+.correct{
+
+    color:#2ECC71;
+}
+
+.wrong{
+
+    color:#FF4757;
+}
+
+#score{
+
+    font-size:40px;
+
+    color:#6C5CE7;
+
+    margin-top:10px;
+}
+
+#gameEnd{
+
+    font-size:55px;
+
+    margin-top:20px;
+
+    color:#FF6B81;
+}
+
+.hidden{
+
+    display:none;
+}
+
+#guide{
+
+    font-size:24px;
+
+    margin-top:10px;
+
+    color:#666;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- 시작 화면 -->
+
+<div id="startScreen">
+
+<h1>개고리개골청 놀이</h1>
+
+<div style="font-size:120px;">
+🐸
+</div>
+
+<button onclick="startIntro()">
+놀이 시작!
+</button>
+
+</div>
+
+<!-- 설명 화면 -->
+
+<div id="introScreen" class="hidden">
+
+<h1>장단을 배워볼까?</h1>
+
+<div id="description">
+
+🐸 덩 = 박수<br>
+🐸 덕 = 오른손 들기<br>
+🐸 쿵 = 왼손 들기
+
+<br><br>
+
+화면의 장단이 선에 닿을 때<br>
+알맞은 동작을 해보자!
+
+</div>
+
+<br>
+
+<audio controls>
+
+<source
+src="개고리 개골청-미래엔.mp3">
+
+</audio>
+
+<br><br>
+
+<button onclick="startGame()">
+게임 시작!
+</button>
+
+</div>
+
+<!-- 게임 화면 -->
+
+<div id="gameScreen" class="hidden">
+
+<h1>덩덕쿵 리듬놀이</h1>
+
+<div id="guide">
+🐸 장단이 빨간 선에 올 때 맞춰보자!
+</div>
+
+<video
+id="video"
+width="520"
+height="390"
+autoplay
+playsinline>
+</video>
+
+<div id="gameArea">
+
+<div id="judgeLine"></div>
+
+</div>
+
+<div id="feedback"></div>
+
+<div id="score">
+점수 : 0
+</div>
+
+<div id="gameEnd"></div>
+
+</div>
+
+<!-- 소리 -->
+
+<audio id="deongSound"
+src="Janggu_1_1.wav"></audio>
+
+<audio id="deokSound"
+src="Janggu_3_2.wav"></audio>
+
+<audio id="kungSound"
+src="Janggu_5_2.wav"></audio>
+
+<script>
+
+function startIntro(){
+
+    document
+    .getElementById("startScreen")
+    .classList.add("hidden");
+
+    document
+    .getElementById("introScreen")
+    .classList.remove("hidden");
+}
+
+const rhythmPattern = [
+
+"덩",
+"덕",
+"쿵",
+"덩",
+"덕",
+"쿵",
+"덩",
+"덩",
+"쿵",
+"덕"
+
+];
+
+let currentIndex = 0;
+
+let currentRhythm = "";
+
+let score = 0;
+
+let activeNote = null;
+
+let noteY = 0;
+
+let gameStarted = false;
+
+const feedbackDiv =
+document.getElementById("feedback");
+
+const scoreDiv =
+document.getElementById("score");
+
+const gameEndDiv =
+document.getElementById("gameEnd");
+
+function startGame(){
+
+    document
+    .getElementById("introScreen")
+    .classList.add("hidden");
+
+    document
+    .getElementById("gameScreen")
+    .classList.remove("hidden");
+
+    score = 0;
+
+    currentIndex = 0;
+
+    gameStarted = true;
+
+    nextRhythm();
+}
+
+function nextRhythm(){
+
+    if(currentIndex >= rhythmPattern.length){
+
+        endGame();
+
+        return;
+    }
+
+    currentRhythm =
+    rhythmPattern[currentIndex];
+
+    createNote(currentRhythm);
+
+    currentIndex++;
+}
+
+function createNote(type){
+
+    const gameArea =
+    document.getElementById("gameArea");
+
+    const note =
+    document.createElement("div");
+
+    note.classList.add("note");
+
+    if(type === "덩"){
+        note.classList.add("deong");
+    }
+
+    if(type === "덕"){
+        note.classList.add("deok");
+    }
+
+    if(type === "쿵"){
+        note.classList.add("kung");
+    }
+
+    note.innerHTML = type;
+
+    note.style.top = "-130px";
+
+    gameArea.appendChild(note);
+
+    activeNote = note;
+
+    noteY = -130;
+
+    const fall =
+    setInterval(()=>{
+
+        noteY += 5;
+
+        note.style.top =
+        noteY + "px";
+
+        if(noteY > 540){
+
+            clearInterval(fall);
+
+            note.remove();
+
+            feedbackDiv.innerHTML =
+            "MISS";
+
+            feedbackDiv.className =
+            "wrong";
+
+            setTimeout(()=>{
+
+                nextRhythm();
+
+            },500);
+        }
+
+    },16);
+}
+
+function playSound(type){
+
+    if(type === "덩"){
+
+        const s =
+        document.getElementById("deongSound");
+
+        s.currentTime = 0;
+
+        s.play();
+    }
+
+    if(type === "덕"){
+
+        const s =
+        document.getElementById("deokSound");
+
+        s.currentTime = 0;
+
+        s.play();
+    }
+
+    if(type === "쿵"){
+
+        const s =
+        document.getElementById("kungSound");
+
+        s.currentTime = 0;
+
+        s.play();
+    }
+}
+
+function checkAnswer(action){
+
+    if(!gameStarted) return;
+
+    let correct = false;
+
+    if(
+    currentRhythm === "덩" &&
+    action === "clap"
+    ){
+        correct = true;
+    }
+
+    if(
+    currentRhythm === "덕" &&
+    action === "right"
+    ){
+        correct = true;
+    }
+
+    if(
+    currentRhythm === "쿵" &&
+    action === "left"
+    ){
+        correct = true;
+    }
+
+    if(correct){
+
+        const judgeY = 380;
+
+        const distance =
+        Math.abs(noteY - judgeY);
+
+        let result = "";
+
+        if(distance < 35){
+
+            result = "PERFECT";
+
+            score += 20;
+        }
+
+        else if(distance < 90){
+
+            result = "GOOD";
+
+            score += 10;
+        }
+
+        else{
+
+            result = "BAD";
+
+            score += 5;
+        }
+
+        playSound(currentRhythm);
+
+        feedbackDiv.innerHTML =
+        result;
+
+        feedbackDiv.className =
+        "correct";
+
+        scoreDiv.innerHTML =
+        "점수 : " + score;
+
+        if(activeNote){
+
+            activeNote.remove();
+        }
+
+        setTimeout(()=>{
+
+            nextRhythm();
+
+        },500);
+    }
+}
+
+function endGame(){
+
+    gameStarted = false;
+
+    gameEndDiv.innerHTML =
+    "🎉 최종 점수 : " +
+    score + "점 🎉";
+}
+
+const video =
+document.getElementById("video");
+
+const hands = new Hands({
+
+    locateFile:(file)=>{
+
+        return
+        `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+    }
+});
+
+hands.setOptions({
+
+    maxNumHands:2,
+
+    minDetectionConfidence:0.7,
+
+    minTrackingConfidence:0.7
+});
+
+hands.onResults(onResults);
+
+const camera = new Camera(video,{
+
+    onFrame:async()=>{
+
+        await hands.send({
+            image:video
+        });
+    },
+
+    width:520,
+
+    height:390
+});
+
+camera.start();
+
+function onResults(results){
+
+    if(!results.multiHandLandmarks)
+    return;
+
+    const handCount =
+    results.multiHandLandmarks.length;
+
+    if(handCount === 2){
+
+        checkAnswer("clap");
+    }
+
+    if(handCount === 1){
+
+        const hand =
+        results.multiHandedness[0].label;
+
+        if(hand === "Right"){
+
+            checkAnswer("right");
+        }
+
+        if(hand === "Left"){
+
+            checkAnswer("left");
+        }
+    }
+}
+
+</script>
+
+</body>
+</html>
